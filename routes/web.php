@@ -31,6 +31,9 @@ Route::middleware(['auth', 'role:user'])->group(function () {
         return view('user.dashboard');
     })->name('user.dashboard');
 });
+Route::get('/dashboard', function () {
+    return view('dashboard');
+})->middleware(['auth', 'verified'])->name('dashboard');
 
 // 📌 Gestion des utilisateurs (uniquement pour les administrateurs)
 Route::middleware(['auth', 'role:admin'])->group(function () {
