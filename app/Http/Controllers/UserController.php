@@ -2,49 +2,53 @@
 
 namespace App\Http\Controllers;
 
+use App\Http\Requests\ProfileUpdateRequest;
+use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
-use App\Models\User;
+use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Redirect;
+use Illuminate\View\View;
 
-class UserController extends Controller
+class ProfileController extends Controller
 {
-    /**
-     * Affiche la liste des utilisateurs.
-     */
-    public function index()
+    public function edit(Request $request): View
     {
-        $users = User::all();
-        return view('users.index', compact('users'));
+        return view('profile.edit', [
+            'user' => $request->user(),
+        ]);
+    }
+
+    public function update(ProfileUpdateRequest $request): RedirectResponse
+    {
+        $request->user()->fill($request->validated());
+
+        if ($request->user()->isDirty('email')) {
+            $request->user()->email_verified_at = null;
+        }
+
+        $request->user()->save();
+
+        return Redirect::route('profile.edit')->with('status', 'profile-updated');
     }
 
     /**
-     * Affiche le formulaire d'édition d'un utilisateur.
+     * Delete the user's account.
      */
-    public function edit(User $user)
+    public function destroy(Request $request): RedirectResponse
     {
-        return view('users.edit', compact('user'));
-    }
-
-    /**
-     * Met à jour un utilisateur.
-     */
-    public function update(Request $request, User $user)
-    {
-        $request->validate([
-            'name' => 'required',
-            'email' => 'required|email',
+        $request->validateWithBag('userDeletion', [
+            'password' => ['required', 'current_password'],
         ]);
 
-        $user->update($request->all());
+        $user = $request->user();
 
-        return redirect()->route('users.index')->with('success', 'Utilisateur mis à jour.');
-    }
+        Auth::logout();
 
-    /**
-     * Supprime un utilisateur.
-     */
-    public function destroy(User $user)
-    {
         $user->delete();
-        return redirect()->route('users.index')->with('success', 'Utilisateur supprimé.');
+
+        $request->session()->invalidate();
+        $request->session()->regenerateToken();
+
+        return Redirect::to('/');
     }
 }
