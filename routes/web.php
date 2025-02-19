@@ -20,12 +20,12 @@ Route::get('/home', function () {
     return redirect('/dashboard');
 })->middleware(['auth'])->name('home');
 
-// 📌 Routes pour les administrateurs
+//  Routes pour les administrateurs
 Route::middleware(['auth', 'role:admin'])->group(function () {
     Route::get('/admin-dashboard', [AdminController::class, 'index'])->name('admin.dashboard');
 });
 
-// 📌 Routes pour les utilisateurs normaux
+//  Routes pour les utilisateurs normaux
 Route::middleware(['auth', 'role:user'])->group(function () {
     Route::get('/user-dashboard', function () {
         return view('user.dashboard');
@@ -35,12 +35,12 @@ Route::get('/dashboard', function () {
     return view('dashboard');
 })->middleware(['auth', 'verified'])->name('dashboard');
 
-// 📌 Gestion des utilisateurs (uniquement pour les administrateurs)
+//  Gestion des utilisateurs (uniquement pour les administrateurs)
 Route::middleware(['auth', 'role:admin'])->group(function () {
     Route::resource('users', UserController::class);
 });
 
-// 📌 Gestion du profil utilisateur
+//  Gestion du profil utilisateur
 Route::middleware('auth')->group(function () {
     Route::get('/profile', [ProfileController::class, 'edit'])->name('profile.edit');
     Route::patch('/profile', [ProfileController::class, 'update'])->name('profile.update');
