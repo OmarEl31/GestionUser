@@ -4,6 +4,8 @@ use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\ProfileController;
 use App\Http\Controllers\UserController;
 use App\Http\Controllers\AdminController;
+use App\Http\Controllers\ArticleController;
+
 
 // Page d'accueil
 Route::get('/', function () {
@@ -24,6 +26,9 @@ Route::get('/home', function () {
 Route::middleware(['auth', 'role:admin'])->group(function () {
     Route::get('/admin-dashboard', [AdminController::class, 'index'])->name('admin.dashboard');
 });
+
+//Routes vers Article
+Route::resource('articles', ArticleController::class)->middleware(['auth']);
 
 //  Routes pour les utilisateurs normaux
 Route::middleware(['auth', 'role:user'])->group(function () {
