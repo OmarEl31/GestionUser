@@ -27,6 +27,19 @@ Route::middleware(['auth', 'role:admin'])->group(function () {
     Route::get('/admin-dashboard', [AdminController::class, 'index'])->name('admin.dashboard');
 });
 
+Route::middleware(['auth'])->group(function () {
+    Route::resource('articles', ArticleController::class);
+});
+
+Route::middleware(['auth', 'role:admin'])->group(function () {
+    Route::resource('articles', ArticleController::class);
+});
+
+Route::middleware(['auth', 'permission:publish articles'])->group(function () {
+    Route::get('/articles', [ArticleController::class, 'index'])->name('articles.index');
+});
+
+
 //Routes vers Article
 Route::resource('articles', ArticleController::class)->middleware(['auth']);
 

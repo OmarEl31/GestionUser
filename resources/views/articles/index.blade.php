@@ -2,38 +2,51 @@
 
 @section('content')
 <div class="container">
-    <h2>Liste des articles</h2>
-    <a href="{{ route('articles.create') }}" class="btn btn-primary mb-3">Créer un article</a>
+    <h1 class="mb-4">Liste des Articles</h1>
 
-    @if (session('success'))
+    <!-- Formulaire de recherche -->
+    <form method="GET" action="{{ route('articles.index') }}" class="mb-4">
+        <input type="text" name="search" class="form-control" placeholder="Rechercher un article..." value="{{ request('search') }}">
+        <button type="submit" class="btn btn-primary mt-2">Rechercher</button>
+    </form>
+
+    <!-- Messages de succès -->
+    @if(session('success'))
         <div class="alert alert-success">{{ session('success') }}</div>
     @endif
 
-    <table class="table">
-        <thead>
-            <tr>
-                <th>Titre</th>
-                <th>Actions</th>
-            </tr>
-        </thead>
-        <tbody>
-            @foreach($articles as $article)
+    <!-- Liste des articles -->
+    @if($articles->count())
+        <table class="table table-striped">
+            <thead>
                 <tr>
-                    <td>{{ $article->title }}</td>
-                    <td>
-                        <a href="{{ route('articles.show', $article->id) }}" class="btn btn-info">Voir</a>
-                        <a href="{{ route('articles.edit', $article->id) }}" class="btn btn-warning">Modifier</a>
-                        <form action="{{ route('articles.destroy', $article->id) }}" method="POST" style="display:inline;">
-                            @csrf
-                            @method('DELETE')
-                            <button type="submit" class="btn btn-danger">Supprimer</button>
-                        </form>
-                    </td>
+                    <th>Titre</th>
+                    <th>Contenu</th>
+                    <th>Actions</th>
                 </tr>
-            @endforeach
-        </tbody>
-    </table>
+            </thead>
+            <tbody>
+                @foreach($articles as $article)
+                    <tr>
+                        <td>{{ $article->title }}</td>
+                        <td>{{ Str::limit($article->content, 50) }}</td>
+                        <td>
+                            <a href="{{ route('articles.edit', $article) }}" class="btn btn-warning btn-sm">Modifier</a>
+                            <form action="{{ route('articles.destroy', $article) }}" method="POST" style="display: inline-block;">
+                                @csrf
+                                @method('DELETE')
+                                <button type="submit" class="btn btn-danger btn-sm">Supprimer</button>
+                            </form>
+                        </td>
+                    </tr>
+                @endforeach
+            </tbody>
+        </table>
 
-    {{ $articles->links() }}
+        <!-- Pagination -->
+        {{ $articles->links() }}
+    @else
+        <p>Aucun article trouvé.</p>
+    @endif
 </div>
 @endsection
