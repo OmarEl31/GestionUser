@@ -14,7 +14,7 @@ Route::get('/', function () {
 });
 
 // ============================
-//  Rediriger les utilisateurs après connexion vers leur dashboard
+//  Redirection post-connexion selon le rôle
 // ============================
 Route::get('/home', function () {
     if (auth()->user()->hasRole('admin')) {
@@ -26,52 +26,54 @@ Route::get('/home', function () {
 })->middleware(['auth'])->name('home');
 
 // ============================
-//  Dashboard Administrateur (Accès réservé aux admins)
+//  Dashboard Administrateur
 // ============================
 Route::middleware(['auth', 'role:admin'])->group(function () {
     Route::get('/admin-dashboard', function () {
         return view('admin.dashboard');
     })->name('admin.dashboard');
+
+    // Gestion des utilisateurs (Admins uniquement)
+    Route::resource('users', UserController::class);
+
+    // Attribution des rôles aux utilisateurs
+    Route::get('/assign-role/{userId}/{roleName}', [UserController::class, 'assignRoleToUser'])->name('assign.role');
 });
 
 // ============================
-//  Dashboard Utilisateur (Accès réservé aux utilisateurs classiques)
+//  Dashboard Utilisateur
 // ============================
 Route::middleware(['auth', 'role:user'])->group(function () {
     Route::get('/user-dashboard', [UserController::class, 'index'])->name('user.dashboard');
 });
 
 // ============================
-//  Dashboard général accessible à tous les utilisateurs authentifiés
-// ===========================
+//  Dashboard général (Tous utilisateurs connectés)
+// ============================
 Route::get('/dashboard', function () {
     return view('dashboard');
 })->middleware(['auth', 'verified'])->name('dashboard');
 
 // ============================
-//  Gestion des articles (Accessible à tous les utilisateurs connectés)
+//  Gestion des Articles
 // ============================
+// Accessible à tous les utilisateurs authentifiés
 Route::middleware(['auth'])->group(function () {
     Route::resource('articles', ArticleController::class);
 });
 
-//  Ajout de permissions spécifiques sur certaines actions des articles
+// Permissions spécifiques aux actions sur les articles
 Route::middleware(['auth', 'permission:publish articles'])->group(function () {
-    Route::get('/articles', [ArticleController::class, 'index'])->name('articles.index');
+    Route::get('/articles/create', [ArticleController::class, 'create'])->name('articles.create');
+    Route::post('/articles', [ArticleController::class, 'store'])->name('articles.store');
+});
+
+Route::middleware(['auth', 'permission:delete articles'])->group(function () {
+    Route::delete('/articles/{id}', [ArticleController::class, 'destroy'])->name('articles.destroy');
 });
 
 // ============================
-//  Gestion des utilisateurs (Accès réservé aux admins)
-// ============================
-Route::middleware(['auth', 'role:admin'])->group(function () {
-    Route::resource('users', UserController::class);
-});
-
-//  Attribution d'un rôle à un utilisateur spécifique (Admin uniquement)
-Route::middleware(['auth', 'role:admin'])->get('/assign-role/{userId}/{roleName}', [UserController::class, 'assignRoleToUser']);
-
-// ============================
-//  Gestion du profil utilisateur (Accessible à tous les utilisateurs authentifiés)
+//  Gestion du Profil Utilisateur
 // ============================
 Route::middleware('auth')->group(function () {
     Route::get('/profile', [ProfileController::class, 'edit'])->name('profile.edit');
@@ -82,4 +84,4 @@ Route::middleware('auth')->group(function () {
 // ============================
 //  Authentification Laravel Breeze
 // ============================
-require __DIR__.'/auth.php';
+require __DIR__ . '/auth.php';

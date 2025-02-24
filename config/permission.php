@@ -8,7 +8,6 @@ return [
     'permission' => Spatie\Permission\Models\Permission::class,
 ],
 
-
     'table_names' => [
 
         /*
