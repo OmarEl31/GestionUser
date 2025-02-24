@@ -8,9 +8,23 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Redirect;
 use Illuminate\View\View;
+use Spatie\Permission\Models\Role;
+use Spatie\Permission\Models\Permission;
 
-class ProfileController extends Controller
+
+
+class UserController extends Controller
 {
+    public function assignRoleToUser($userId, $roleName)
+{
+    $user = User::findOrFail($userId);
+    $role = Role::findByName($roleName);
+
+    $user->assignRole($role);
+
+    return redirect()->back()->with('success', 'Rôle attribué avec succès.');
+}
+
     public function edit(Request $request): View
     {
         return view('profile.edit', [
