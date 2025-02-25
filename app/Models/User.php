@@ -11,7 +11,7 @@ use Spatie\Activitylog\Traits\LogsActivity;
 
 class User extends Authenticatable implements Auditable
 {
-    use Notifiable, HasApiTokens, \OwenIt\Auditing\Auditable, Impersonate, LogsActivity;
+    use Notifiable, HasApiTokens,HasRoles, \OwenIt\Auditing\Auditable, Impersonate, LogsActivity;
 
     protected $fillable = [
         'name', 'email', 'password'
