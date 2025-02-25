@@ -2,47 +2,49 @@
 
 namespace App\Models;
 
-// use Illuminate\Contracts\Auth\MustVerifyEmail;
-use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
-use Spatie\Permission\Traits\HasRoles;
+use Laravel\Passport\HasApiTokens;
+use OwenIt\Auditing\Contracts\Auditable;
+use Lab404\Impersonate\Models\Impersonate;
+use Spatie\Activitylog\Traits\LogsActivity;
 
-class User extends Authenticatable
+class User extends Authenticatable implements Auditable
 {
-    use HasFactory, Notifiable;
-    use HasRoles; //role et permission aux users
-    /**
-     * The attributes that are mass assignable.
-     *
-     * @var list<string>
-     */
+    use Notifiable, HasApiTokens, \OwenIt\Auditing\Auditable, Impersonate, LogsActivity;
+
     protected $fillable = [
-        'name',
-        'email',
-        'password',
+        'name', 'email', 'password'
     ];
 
-    /**
-     * The attributes that should be hidden for serialization.
-     *
-     * @var list<string>
-     */
     protected $hidden = [
-        'password',
-        'remember_token',
+        'password', 'remember_token'
     ];
 
-    /**
-     * Get the attributes that should be cast.
-     *
-     * @return array<string, string>
-     */
-    protected function casts(): array
+    // Relations
+    public function roles()
     {
-        return [
-            'email_verified_at' => 'datetime',
-            'password' => 'hashed',
-        ];
+        return $this->belongsToMany(Role::class, 'role_user');
+    }
+
+    public function activityLogs()
+    {
+        return $this->hasMany(ActivityLog::class);
+    }
+
+    public function twoFactorAuth()
+    {
+        return $this->hasOne(TwoFactorAuth::class);
+    }
+
+    // Permissions par rôle
+    public function hasPermission($permission)
+    {
+        foreach ($this->roles as $role) {
+            if ($role->permissions->contains('name', $permission)) {
+                return true;
+            }
+        }
+        return false;
     }
 }

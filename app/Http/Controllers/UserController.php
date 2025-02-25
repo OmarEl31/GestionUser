@@ -1,87 +1,136 @@
 <?php
 
-use Illuminate\Support\Facades\Route;
-use App\Http\Controllers\ProfileController;
-use App\Http\Controllers\UserController;
-use App\Http\Controllers\AdminController;
-use App\Http\Controllers\ArticleController;
-use Spatie\Permission\Models\Role;
-use Spatie\Permission\Models\Permission;
+namespace App\Http\Controllers;
 
+use App\Models\User;
+use App\Models\Role;
+use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Hash;
+use Illuminate\Support\Facades\Validator;
+use Spatie\Activitylog\Models\Activity;
 
-// ============================
-//  Page d'accueil
-// ============================
-Route::get('/', function () {
-    return view('welcome');
-}); 
-
-// ============================
-//  Rediriger les utilisateurs après connexion vers leur dashboard
-// ============================
-Route::get('/home', function () {
-    if (auth()->user()->hasRole('admin')) {
-        return redirect()->route('admin.dashboard');
-    } elseif (auth()->user()->hasRole('user')) {
-        return redirect()->route('user.dashboard');
+class UserController extends Controller
+{
+    /**
+     * Affiche la liste des utilisateurs.
+     */
+    public function index()
+    {
+        $users = User::with('roles')->paginate(10);
+        return view('users.index', compact('users'));
     }
-    return redirect('/dashboard');
-})->middleware(['auth'])->name('home');
 
-// ============================
-//  Dashboard Administrateur (Accès réservé aux admins)
-// ============================
-Route::middleware(['auth', 'role:admin'])->group(function () {
-    Route::get('/admin-dashboard', function () {
-        return view('admin.dashboard');
-    })->name('admin.dashboard');
-});
+    /**
+     * Affiche le formulaire de création d'un nouvel utilisateur.
+     */
+    public function create()
+    {
+        $roles = Role::all();
+        return view('users.create', compact('roles'));
+    }
 
-// ============================
-//  Dashboard Utilisateur (Accès réservé aux utilisateurs classiques)
-// ============================
-Route::middleware(['auth', 'role:user'])->group(function () {
-    Route::get('/user-dashboard', [UserController::class, 'index'])->name('user.dashboard');
-});
+    /**
+     * Stocke un nouvel utilisateur dans la base de données.
+     */
+    public function store(Request $request)
+    {
+        $validator = Validator::make($request->all(), [
+            'name' => 'required|string|max:255',
+            'email' => 'required|string|email|max:255|unique:users',
+            'password' => 'required|string|min:8|confirmed',
+            'roles' => 'required|array'
+        ]);
 
-// ============================
-//  Dashboard général accessible à tous les utilisateurs authentifiés
-// ===========================
-Route::get('/dashboard', function () {
-    return view('dashboard');
-})->middleware(['auth', 'verified'])->name('dashboard');
+        if ($validator->fails()) {
+            return redirect()->back()->withErrors($validator)->withInput();
+        }
 
-// ============================
-//  Gestion des articles (Accessible à tous les utilisateurs connectés)
-// ============================
-Route::middleware(['auth'])->group(function () {
-    Route::resource('articles', ArticleController::class);
-});
+        $user = User::create([
+            'name' => $request->name,
+            'email' => $request->email,
+            'password' => Hash::make($request->password),
+        ]);
 
-//  Ajout de permissions spécifiques sur certaines actions des articles
-Route::middleware(['auth', 'permission:publish articles'])->group(function () {
-    Route::get('/articles', [ArticleController::class, 'index'])->name('articles.index');
-});
+        // Attribution des rôles
+        $user->roles()->attach($request->roles);
 
-// ============================
-//  Gestion des utilisateurs (Accès réservé aux admins)
-// ============================
-Route::middleware(['auth', 'role:admin'])->group(function () {
-    Route::resource('users', UserController::class);
-});
+        activity()
+            ->performedOn($user)
+            ->causedBy(auth()->user())
+            ->log('Utilisateur créé');
 
-//  Attribution d'un rôle à un utilisateur spécifique (Admin uniquement)
-Route::middleware(['auth', 'role:admin'])->get('/assign-role/{userId}/{roleName}', [UserController::class, 'assignRoleToUser']);
+        return redirect()->route('users.index')->with('success', 'Utilisateur créé avec succès.');
+    }
 
-// ============================
-//  Gestion du profil utilisateur (Accessible à tous les utilisateurs authentifiés)
-// ============================
-Route::middleware('auth')->group(function () {
-    Route::get('/profile', [ProfileController::class, 'edit'])->name('profile.edit');
-    Route::patch('/profile', [ProfileController::class, 'update'])->name('profile.update');
-    Route::delete('/profile', [ProfileController::class, 'destroy'])->name('profile.destroy');
-});
+    /**
+     * Affiche les détails d'un utilisateur spécifique.
+     */
+    public function show(User $user)
+    {
+        return view('users.show', compact('user'));
+    }
 
-// ============================
-//  Authentification Laravel Breeze
-// ============================
+    /**
+     * Affiche le formulaire de modification d'un utilisateur.
+     */
+    public function edit(User $user)
+    {
+        $roles = Role::all();
+        return view('users.edit', compact('user', 'roles'));
+    }
+
+    /**
+     * Met à jour les informations de l'utilisateur.
+     */
+    public function update(Request $request, User $user)
+    {
+        $validator = Validator::make($request->all(), [
+            'name' => 'required|string|max:255',
+            'email' => 'required|string|email|max:255|unique:users,email,' . $user->id,
+            'roles' => 'required|array'
+        ]);
+
+        if ($validator->fails()) {
+            return redirect()->back()->withErrors($validator)->withInput();
+        }
+
+        $user->update([
+            'name' => $request->name,
+            'email' => $request->email
+        ]);
+
+        // Mettre à jour les rôles
+        $user->roles()->sync($request->roles);
+
+        activity()
+            ->performedOn($user)
+            ->causedBy(auth()->user())
+            ->log('Utilisateur mis à jour');
+
+        return redirect()->route('users.index')->with('success', 'Utilisateur mis à jour avec succès.');
+    }
+
+    /**
+     * Supprime un utilisateur.
+     */
+    public function destroy(User $user)
+    {
+        $user->delete();
+
+        activity()
+            ->performedOn($user)
+            ->causedBy(auth()->user())
+            ->log('Utilisateur supprimé');
+
+        return redirect()->route('users.index')->with('success', 'Utilisateur supprimé avec succès.');
+    }
+
+    /**
+     * Journal d'activités d'un utilisateur spécifique.
+     */
+    public function activityLogs(User $user)
+    {
+        $activities = Activity::where('causer_id', $user->id)->get();
+        return view('users.activity_logs', compact('user', 'activities'));
+    }
+}
