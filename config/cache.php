@@ -15,7 +15,7 @@ return [
     |
     */
 
-    'default' => env('CACHE_STORE', 'database'),
+    'default' => env('CACHE_DRIVER', 'database'),
 
     /*
     |--------------------------------------------------------------------------
@@ -40,16 +40,15 @@ return [
 
         'database' => [
             'driver' => 'database',
-            'connection' => env('DB_CACHE_CONNECTION'),
-            'table' => env('DB_CACHE_TABLE', 'cache'),
-            'lock_connection' => env('DB_CACHE_LOCK_CONNECTION'),
-            'lock_table' => env('DB_CACHE_LOCK_TABLE'),
+            'connection' => env('DB_CONNECTION', 'mysql'),
+            'table' => 'cache', // Nom de la table pour le cache
+            'lock_connection' => env('DB_CONNECTION', 'mysql'),
+            'lock_table' => 'cache_locks', // Table de verrouillage
         ],
 
         'file' => [
             'driver' => 'file',
             'path' => storage_path('framework/cache/data'),
-            'lock_path' => storage_path('framework/cache/data'),
         ],
 
         'memcached' => [
@@ -97,7 +96,7 @@ return [
     | Cache Key Prefix
     |--------------------------------------------------------------------------
     |
-    | When utilizing the APC, database, memcached, Redis, and DynamoDB cache
+    | When utilizing the APC, database, memcached, Redis, or DynamoDB cache
     | stores, there might be other applications using the same cache. For
     | that reason, you may prefix every cache key to avoid collisions.
     |

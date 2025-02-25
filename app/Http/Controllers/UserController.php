@@ -14,7 +14,7 @@ use Spatie\Permission\Models\Permission;
 // ============================
 Route::get('/', function () {
     return view('welcome');
-});
+}); 
 
 // ============================
 //  Rediriger les utilisateurs après connexion vers leur dashboard
