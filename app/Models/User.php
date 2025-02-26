@@ -8,10 +8,15 @@ use Laravel\Passport\HasApiTokens;
 use OwenIt\Auditing\Contracts\Auditable;
 use Lab404\Impersonate\Models\Impersonate;
 use Spatie\Activitylog\Traits\LogsActivity;
+use Spatie\Permission\Traits\HasRoles;
+use Spatie\Activitylog\LogOptions;
+use Illuminate\Database\Eloquent\Factories\HasFactory;
+
+
 
 class User extends Authenticatable implements Auditable
 {
-    use Notifiable, HasApiTokens,HasRoles, \OwenIt\Auditing\Auditable, Impersonate, LogsActivity;
+    use HasFactory, Notifiable, HasApiTokens, HasRoles, \OwenIt\Auditing\Auditable, Impersonate, LogsActivity;
 
     protected $fillable = [
         'name', 'email', 'password'
@@ -36,7 +41,13 @@ class User extends Authenticatable implements Auditable
     {
         return $this->hasOne(TwoFactorAuth::class);
     }
-
+    public function getActivitylogOptions(): LogOptions
+    {
+        return LogOptions::defaults()
+            ->logAll()
+            ->useLogName('user_activity')
+            ->logOnlyDirty();
+    }
     // Permissions par rôle
     public function hasPermission($permission)
     {

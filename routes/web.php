@@ -3,6 +3,8 @@
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\UserController;
 use App\Http\Controllers\Auth\EmailVerificationPromptController;
+use App\Http\Controllers\ProfileController;
+
 
 /*
 |--------------------------------------------------------------------------
@@ -20,7 +22,12 @@ use App\Http\Controllers\Auth\EmailVerificationPromptController;
 Route::get('/', function () {
     return view('welcome');
 })->name('home');
-
+//Profile
+Route::middleware(['auth'])->group(function () {
+    Route::get('/profile/edit', [ProfileController::class, 'edit'])->name('profile.edit');
+    Route::put('/profile/update', [ProfileController::class, 'update'])->name('profile.update');
+    Route::delete('/profile/delete', [ProfileController::class, 'destroy'])->name('profile.destroy'); 
+});
 // ============================
 // 🔒 Authentification & Vérification
 // ============================
