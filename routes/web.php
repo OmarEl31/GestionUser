@@ -5,7 +5,6 @@ use App\Http\Controllers\UserController;
 use App\Http\Controllers\Auth\EmailVerificationPromptController;
 use App\Http\Controllers\ProfileController;
 
-
 /*
 |--------------------------------------------------------------------------
 | Routes de l'application
@@ -22,12 +21,17 @@ use App\Http\Controllers\ProfileController;
 Route::get('/', function () {
     return view('welcome');
 })->name('home');
-//Profile
+
+// ============================
+// 👤 Gestion du Profil
+// ============================
 Route::middleware(['auth'])->group(function () {
+    Route::get('/profile', [ProfileController::class, 'show'])->name('profile.show'); // ✅ Ajout de profile.show
     Route::get('/profile/edit', [ProfileController::class, 'edit'])->name('profile.edit');
-    Route::put('/profile/update', [ProfileController::class, 'update'])->name('profile.update');
-    Route::delete('/profile/delete', [ProfileController::class, 'destroy'])->name('profile.destroy'); 
+    Route::put('/profile', [ProfileController::class, 'update'])->name('profile.update'); // ✅ Changer URL
+    Route::delete('/profile', [ProfileController::class, 'destroy'])->name('profile.destroy'); // ✅ Changer URL
 });
+
 // ============================
 // 🔒 Authentification & Vérification
 // ============================
@@ -71,12 +75,6 @@ Route::middleware(['auth', 'role:user'])->group(function () {
     // Dashboard Utilisateur
     Route::get('/user/dashboard', [UserController::class, 'index'])->name('user.dashboard');
 });
-
-
-
-// ============================
-// ⚙️ Gestion du profil utilisateur
-// ============================
 
 // ============================
 // 🔐 Authentification Laravel Breeze

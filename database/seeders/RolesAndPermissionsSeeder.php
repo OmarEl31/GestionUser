@@ -13,18 +13,39 @@ class RolesAndPermissionsSeeder extends Seeder
         // Réinitialiser le cache des permissions
         app()[\Spatie\Permission\PermissionRegistrar::class]->forgetCachedPermissions();
 
-        // Créer des permissions
-        Permission::create(['name' => 'create articles']);
-        Permission::create(['name' => 'edit articles']);
-        Permission::create(['name' => 'delete articles']);
-        Permission::create(['name' => 'publish articles']);
-        Permission::create(['name' => 'unpublish articles']);
+        // Définition des permissions avec `guard_name`
+        $permissions = [
+            'create articles',
+            'edit articles',
+            'delete articles',
+            'publish articles',
+            'unpublish articles'
+        ];
 
-        // Créer des rôles et attribuer des permissions
-        $admin = Role::create(['name' => 'admin']);
-        $admin->givePermissionTo(Permission::all());
+        // Vérifier et créer les permissions
+        foreach ($permissions as $permission) {
+            Permission::firstOrCreate([
+                'name' => $permission,
+                'guard_name' => 'web'
+            ]);
+        }
 
-        $user = Role::create(['name' => 'user']);
-        $user->givePermissionTo(['create articles', 'edit articles']);
+        // Création des rôles (éviter duplication)
+        $admin = Role::firstOrCreate([
+            'name' => 'admin',
+            'guard_name' => 'web'
+        ]);
+
+        $user = Role::firstOrCreate([
+            'name' => 'user',
+            'guard_name' => 'web'
+        ]);
+
+        // Attribution des permissions aux rôles
+        $admin->syncPermissions(Permission::all()); // Admin a toutes les permissions
+        $user->syncPermissions(['create articles', 'edit articles']); // Utilisateur normal a un accès limité
+
+        // Message de confirmation
+        $this->command->info('🎉 Rôles et permissions ajoutés avec succès !');
     }
 }

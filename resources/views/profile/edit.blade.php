@@ -1,29 +1,29 @@
-<x-app-layout>
-    <x-slot name="header">
-        <h2 class="font-semibold text-xl text-gray-800 dark:text-gray-200 leading-tight">
-            {{ __('Profile') }}
-        </h2>
-    </x-slot>
+@extends('layouts.app')
 
-    <div class="py-12">
-        <div class="max-w-7xl mx-auto sm:px-6 lg:px-8 space-y-6">
-            <div class="p-4 sm:p-8 bg-white dark:bg-gray-800 shadow sm:rounded-lg">
-                <div class="max-w-xl">
-                    @include('profile.partials.update-profile-information-form')
-                </div>
+@section('content')
+    <div class="container">
+        <h2>Modifier mon profil</h2>
+        <form method="POST" action="{{ route('profile.update') }}">
+            @csrf
+            @method('PUT')
+
+            <div>
+                <label for="name">Nom :</label>
+                <input type="text" name="name" value="{{ old('name', auth()->user()->name) }}" required>
             </div>
 
-            <div class="p-4 sm:p-8 bg-white dark:bg-gray-800 shadow sm:rounded-lg">
-                <div class="max-w-xl">
-                    @include('profile.partials.update-password-form')
-                </div>
+            <div>
+                <label for="email">Email :</label>
+                <input type="email" name="email" value="{{ old('email', auth()->user()->email) }}" required>
             </div>
 
-            <div class="p-4 sm:p-8 bg-white dark:bg-gray-800 shadow sm:rounded-lg">
-                <div class="max-w-xl">
-                    @include('profile.partials.delete-user-form')
-                </div>
-            </div>
-        </div>
+            <button type="submit">Mettre à jour</button>
+        </form>
+
+        <form method="POST" action="{{ route('profile.destroy') }}">
+            @csrf
+            @method('DELETE')
+            <button type="submit" onclick="return confirm('Êtes-vous sûr ?')">Supprimer mon compte</button>
+        </form>
     </div>
-</x-app-layout>
+@endsection

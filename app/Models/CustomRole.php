@@ -6,7 +6,7 @@ use Illuminate\Database\Eloquent\Model;
 use Spatie\Permission\Models\Role;
 
 
-class Role extends Model
+class MyCustomRole extends Model
 {
     protected $fillable = [
         'role_name', 'role_description'
