@@ -5,12 +5,12 @@ namespace App\Models;
 use Illuminate\Database\Eloquent\Model;
 use Spatie\Permission\Models\Role;
 
+use Spatie\Permission\Models\Role as SpatieRole;
 
-class MyCustomRole extends Model
+class Role extends SpatieRole
 {
-    protected $fillable = [
-        'role_name', 'role_description'
-    ];
+    protected $fillable = ['name', 'guard_name'];
+}
 
     // Relations
     public function users()

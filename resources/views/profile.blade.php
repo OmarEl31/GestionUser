@@ -9,7 +9,6 @@
             {{ session('success') }}
         </div>
     @endif
-
     <div class="card">
         <div class="card-body">
             <form action="{{ route('profile.update') }}" method="POST">
